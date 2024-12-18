@@ -14,8 +14,8 @@ contract CrowdfundingTest is Test {
     function testCreateCampaignSuccess() public {
         // Parâmetros da campanha
         string memory name = "Campanha Teste";
-        uint goal = 1 ether;
-        uint duration = 7 days;
+        uint256 goal = 1 ether;
+        uint256 duration = 7 days;
 
         // Chama o método para criar a campanha
         crowdfunding.createCampaign(name, goal, duration);
@@ -24,9 +24,9 @@ contract CrowdfundingTest is Test {
         (
             address creator,
             string memory campaignName,
-            uint campaignGoal,
-            uint deadline,
-            uint totalContributed,
+            uint256 campaignGoal,
+            uint256 deadline,
+            uint256 totalContributed,
             bool isWithdrawn
         ) = crowdfunding.campaigns(0);
 
@@ -40,29 +40,19 @@ contract CrowdfundingTest is Test {
 
     function testCreateCampaignEmptyNameShouldFail() public {
         // Nome vazio deve falhar
-        vm.expectRevert(
-            abi.encodeWithSelector(Crowdfunding.NameCannotBeEmpty.selector)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.NameCannotBeEmpty.selector));
         crowdfunding.createCampaign("", 1 ether, 7 days);
     }
 
     function testCreateCampaignGoalZeroShouldFail() public {
         // Meta de arrecadação zero deve falhar
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Crowdfunding.GoalMustBeGreaterThanZero.selector
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.GoalMustBeGreaterThanZero.selector));
         crowdfunding.createCampaign("Campanha Teste", 0, 7 days);
     }
 
     function testCreateCampaignDurationZeroShouldFail() public {
         // Duração zero deve falhar
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Crowdfunding.DurationMustBeGreaterThanZero.selector
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.DurationMustBeGreaterThanZero.selector));
         crowdfunding.createCampaign("Campanha Teste", 1 ether, 0);
     }
 
@@ -72,28 +62,14 @@ contract CrowdfundingTest is Test {
         crowdfunding.createCampaign("Campanha 2", 2 ether, 10 days);
 
         // Verifica detalhes da primeira campanha
-        (
-            address creator1,
-            string memory name1,
-            uint goal1,
-            uint deadline1,
-            ,
-
-        ) = crowdfunding.campaigns(0);
+        (address creator1, string memory name1, uint256 goal1, uint256 deadline1,,) = crowdfunding.campaigns(0);
         assertEq(creator1, address(this));
         assertEq(name1, "Campanha 1");
         assertEq(goal1, 1 ether);
         assertEq(deadline1, block.timestamp + 7 days);
 
         // Verifica detalhes da segunda campanha
-        (
-            address creator2,
-            string memory name2,
-            uint goal2,
-            uint deadline2,
-            ,
-
-        ) = crowdfunding.campaigns(1);
+        (address creator2, string memory name2, uint256 goal2, uint256 deadline2,,) = crowdfunding.campaigns(1);
         assertEq(creator2, address(this));
         assertEq(name2, "Campanha 2");
         assertEq(goal2, 2 ether);
@@ -112,11 +88,11 @@ contract CrowdfundingTest is Test {
         crowdfunding.contribute{value: 0.5 ether}(0);
 
         // Verifica os detalhes da campanha
-        (, , , , uint totalContributed, ) = crowdfunding.campaigns(0);
+        (,,,, uint256 totalContributed,) = crowdfunding.campaigns(0);
         assertEq(totalContributed, 0.5 ether); // Total contribuído atualizado
 
         // Verifica a contribuição individual
-        uint contribution = crowdfunding.getContribution(0, address(1));
+        uint256 contribution = crowdfunding.getContribution(0, address(1));
         assertEq(contribution, 0.5 ether);
     }
 
@@ -131,9 +107,7 @@ contract CrowdfundingTest is Test {
         vm.warp(block.timestamp + 8 days);
 
         // Tentar contribuir deve falhar
-        vm.expectRevert(
-            abi.encodeWithSelector(Crowdfunding.CampaignExpired.selector)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.CampaignExpired.selector));
         crowdfunding.contribute{value: 1 ether}(0);
     }
 
@@ -142,11 +116,7 @@ contract CrowdfundingTest is Test {
         crowdfunding.createCampaign("Campanha Teste", 1 ether, 7 days);
 
         // Tentar contribuir com valor zero deve falhar
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Crowdfunding.ContributionMustBeGreaterThanZero.selector
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.ContributionMustBeGreaterThanZero.selector));
         crowdfunding.contribute{value: 0}(0);
     }
 
@@ -175,10 +145,10 @@ contract CrowdfundingTest is Test {
         vm.warp(block.timestamp + 8 days);
 
         // Solicita o saque
-        uint balanceBefore = campaignCreator.balance;
+        uint256 balanceBefore = campaignCreator.balance;
         vm.prank(campaignCreator);
         crowdfunding.withdrawFunds(0);
-        uint balanceAfter = campaignCreator.balance;
+        uint256 balanceAfter = campaignCreator.balance;
 
         // Verifica se os fundos foram sacados
         assertEq(balanceAfter - balanceBefore, 1 ether);
@@ -189,9 +159,7 @@ contract CrowdfundingTest is Test {
         crowdfunding.createCampaign("Campanha Teste", 1 ether, 7 days);
 
         // Tentar sacar antes do prazo expirar deve falhar
-        vm.expectRevert(
-            abi.encodeWithSelector(Crowdfunding.CampaignOngoing.selector)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.CampaignOngoing.selector));
         crowdfunding.withdrawFunds(0);
     }
 
@@ -210,9 +178,7 @@ contract CrowdfundingTest is Test {
         vm.warp(block.timestamp + 8 days);
 
         // Tentar sacar deve falhar
-        vm.expectRevert(
-            abi.encodeWithSelector(Crowdfunding.GoalNotMet.selector)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.GoalNotMet.selector));
         crowdfunding.withdrawFunds(0);
     }
 
@@ -237,10 +203,10 @@ contract CrowdfundingTest is Test {
         vm.warp(block.timestamp + 8 days);
 
         // Solicitar reembolso
-        uint balanceBefore = contributor.balance;
+        uint256 balanceBefore = contributor.balance;
         vm.prank(contributor);
         crowdfunding.refund(0);
-        uint balanceAfter = contributor.balance;
+        uint256 balanceAfter = contributor.balance;
 
         // Verifica se o reembolso foi processado
         assertEq(balanceAfter - balanceBefore, 0.5 ether);
@@ -262,9 +228,7 @@ contract CrowdfundingTest is Test {
 
         // Tentar reembolso deve falhar
         vm.prank(address(1));
-        vm.expectRevert(
-            abi.encodeWithSelector(Crowdfunding.GoalNotMet.selector)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.GoalNotMet.selector));
         crowdfunding.refund(0);
     }
 
@@ -277,9 +241,7 @@ contract CrowdfundingTest is Test {
 
         // Tentar reembolso sem ter contribuído deve falhar
         vm.prank(address(1));
-        vm.expectRevert(
-            abi.encodeWithSelector(Crowdfunding.NoContributionToRefund.selector)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Crowdfunding.NoContributionToRefund.selector));
         crowdfunding.refund(0);
     }
 }
